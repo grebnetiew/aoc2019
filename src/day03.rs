@@ -1,5 +1,7 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 use std::collections::HashMap;
+use std::error::Error as StdError;
+use std::fmt;
 use std::num::ParseIntError;
 
 #[derive(Debug, Copy, Clone)]
@@ -35,13 +37,13 @@ impl Move {
         }
     }
 
-    fn maybe_new(dir: Direction, dis: Result<u32, ParseIntError>) -> Result<Self, ParseIntError> {
+    fn maybe_new(dir: Direction, dis: Result<u32, ParseIntError>) -> Result<Self, Error> {
         Ok(Self::new(dir, dis?))
     }
 }
 
 #[aoc_generator(day3)]
-fn lines_to_moves(input: &str) -> Result<Vec<Vec<Move>>, ParseIntError> {
+fn lines_to_moves(input: &str) -> Result<Vec<Vec<Move>>, Error> {
     input
         .lines()
         .map(|line| {
@@ -52,7 +54,8 @@ fn lines_to_moves(input: &str) -> Result<Vec<Vec<Move>>, ParseIntError> {
                         "L" => Direction::Left,
                         "R" => Direction::Right,
                         "U" => Direction::Up,
-                        _ => Direction::Down,
+                        "D" => Direction::Down,
+                        _ => return Err(Error::InvalidDirection(letter.to_string())),
                     };
                     Move::maybe_new(dir, number.parse())
                 })
@@ -145,5 +148,35 @@ mod tests {
             610
         );
         assert_eq!(solver2(&lines_to_moves("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51\nU98,R91,D20,R16,D67,R40,U7,R15,U6,R7").unwrap()), 410);
+    }
+}
+
+#[derive(Debug)]
+enum Error {
+    InvalidDirection(String),
+    ParseIntError(std::num::ParseIntError),
+}
+
+impl From<ParseIntError> for Error {
+    fn from(error: ParseIntError) -> Self {
+        Error::ParseIntError(error)
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::InvalidDirection(dir) => write!(f, "Invalid direction {}", dir),
+            Error::ParseIntError(pie) => pie.fmt(f),
+        }
+    }
+}
+
+impl StdError for Error {
+    fn cause(&self) -> Option<&dyn StdError> {
+        match self {
+            Error::InvalidDirection(_) => None,
+            Error::ParseIntError(e) => Some(e),
+        }
     }
 }
