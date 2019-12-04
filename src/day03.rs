@@ -59,7 +59,6 @@ fn solver1(input: &Vec<Vec<Move>>) -> u32 {
         }
     }
 
-    let mut crossings = Vec::new();
     let mut closest_dist = 999999;
     // second path
     x = 0;
@@ -70,13 +69,11 @@ fn solver1(input: &Vec<Vec<Move>>) -> u32 {
             m.0.mv(&mut x, &mut y);
             d -= 1;
             if hm.contains_key(&(x, y)) {
-                crossings.push((x, y));
                 let dist: u32 = (x.abs() + y.abs()) as u32;
                 if closest_dist > dist {
                     closest_dist = dist;
                 }
             }
-            hm.insert((x, y), 2);
         }
     }
 
@@ -101,26 +98,23 @@ fn solver2(input: &Vec<Vec<Move>>) -> u32 {
         }
     }
 
-    let mut crossings = Vec::new();
     let mut closest_dist = 999999;
     // second path
     x = 0;
     y = 0;
     wire = 0;
     for &m in &input[1] {
-        let mut d = m.1;
-        while d > 0 {
+        let mut delta = m.1;
+        while delta > 0 {
             m.0.mv(&mut x, &mut y);
-            d -= 1;
+            delta -= 1;
             wire += 1;
             if hm.contains_key(&(x, y)) {
-                crossings.push((x, y));
                 let dist: u32 = (wire + hm[&(x, y)]) as u32;
                 if closest_dist > dist {
                     closest_dist = dist;
                 }
             }
-            hm.insert((x, y), 2);
         }
     }
 
