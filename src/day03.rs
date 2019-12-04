@@ -11,7 +11,7 @@ enum Direction {
 }
 
 impl Direction {
-    fn mv(&self, x: &mut i32, y: &mut i32) {
+    fn apply_one_step_to(&self, x: &mut i32, y: &mut i32) {
         match self {
             Direction::Left => *x -= 1,
             Direction::Right => *x += 1,
@@ -22,7 +22,23 @@ impl Direction {
 }
 
 #[derive(Debug, Copy, Clone)]
-struct Move(Direction, u32);
+struct Move {
+    direction: Direction,
+    distance: u32,
+}
+
+impl Move {
+    fn new(direction: Direction, distance: u32) -> Self {
+        Self {
+            direction,
+            distance,
+        }
+    }
+
+    fn maybe_new(dir: Direction, dis: Result<u32, ParseIntError>) -> Result<Self, ParseIntError> {
+        Ok(Self::new(dir, dis?))
+    }
+}
 
 #[aoc_generator(day3)]
 fn lines_to_moves(input: &str) -> Result<Vec<Vec<Move>>, ParseIntError> {
@@ -30,7 +46,7 @@ fn lines_to_moves(input: &str) -> Result<Vec<Vec<Move>>, ParseIntError> {
         .lines()
         .map(|line| {
             line.split(',')
-                .map(|segment| -> Result<Move, ParseIntError> {
+                .map(|segment| {
                     let (letter, number) = segment.split_at(1);
                     let dir = match letter {
                         "L" => Direction::Left,
@@ -38,87 +54,57 @@ fn lines_to_moves(input: &str) -> Result<Vec<Vec<Move>>, ParseIntError> {
                         "U" => Direction::Up,
                         _ => Direction::Down,
                     };
-                    Ok(Move(dir, number.parse()?))
+                    Move::maybe_new(dir, number.parse())
                 })
-                .collect::<Result<Vec<Move>, ParseIntError>>()
+                .collect()
         })
         .collect()
 }
 
-#[aoc(day3, part1)]
-fn solver1(input: &Vec<Vec<Move>>) -> u32 {
-    let mut hm = HashMap::new();
-    // add first path
-    let (mut x, mut y) = (0i32, 0i32);
-    for &m in &input[0] {
-        let mut d = m.1;
-        while d > 0 {
-            m.0.mv(&mut x, &mut y);
-            d -= 1;
-            hm.insert((x, y), 1);
-        }
-    }
-
-    let mut closest_dist = 999999;
-    // second path
-    x = 0;
-    y = 0;
-    for &m in &input[1] {
-        let mut d = m.1;
-        while d > 0 {
-            m.0.mv(&mut x, &mut y);
-            d -= 1;
-            if hm.contains_key(&(x, y)) {
-                let dist: u32 = (x.abs() + y.abs()) as u32;
-                if closest_dist > dist {
-                    closest_dist = dist;
-                }
-            }
-        }
-    }
-
-    closest_dist
-}
-
-#[aoc(day3, part2)]
-fn solver2(input: &Vec<Vec<Move>>) -> u32 {
+fn crossings(input: &Vec<Vec<Move>>) -> HashMap<(i32, i32), u32> {
     let mut hm = HashMap::new();
     // add first path
     let (mut x, mut y) = (0i32, 0i32);
     let mut wire = 0;
     for &m in &input[0] {
-        let mut d = m.1;
-        while d > 0 {
-            m.0.mv(&mut x, &mut y);
-            d -= 1;
+        for _d in 0..m.distance {
+            m.direction.apply_one_step_to(&mut x, &mut y);
             wire += 1;
-            if !hm.contains_key(&(x, y)) {
-                hm.insert((x, y), wire);
-            }
+            hm.entry((x, y)).or_insert(wire);
         }
     }
 
-    let mut closest_dist = 999999;
+    let mut crossings = HashMap::new();
     // second path
     x = 0;
     y = 0;
     wire = 0;
     for &m in &input[1] {
-        let mut delta = m.1;
-        while delta > 0 {
-            m.0.mv(&mut x, &mut y);
-            delta -= 1;
+        for _d in 0..m.distance {
+            m.direction.apply_one_step_to(&mut x, &mut y);
             wire += 1;
             if hm.contains_key(&(x, y)) {
-                let dist: u32 = (wire + hm[&(x, y)]) as u32;
-                if closest_dist > dist {
-                    closest_dist = dist;
-                }
+                let dist = wire + hm[&(x, y)];
+                crossings.entry((x, y)).or_insert(dist);
             }
         }
     }
 
-    closest_dist
+    crossings
+}
+
+#[aoc(day3, part1)]
+fn solver1(input: &Vec<Vec<Move>>) -> u32 {
+    crossings(input)
+        .keys()
+        .map(|&(x, y)| x.abs() as u32 + y.abs() as u32)
+        .min()
+        .unwrap()
+}
+
+#[aoc(day3, part2)]
+fn solver2(input: &Vec<Vec<Move>>) -> u32 {
+    *crossings(input).values().min().unwrap()
 }
 
 #[cfg(test)]
