@@ -21,9 +21,9 @@ struct Computer {
 }
 
 impl Computer {
-    fn new(programData: Vec<isize>, input: Vec<isize>) -> Self {
+    fn new(program_data: Vec<isize>, input: Vec<isize>) -> Self {
         Self {
-            memory: programData,
+            memory: program_data,
             procnt: 0,
             halted: false,
             input: input,
@@ -31,55 +31,96 @@ impl Computer {
         }
     }
     fn one_step(&mut self) {
-        match self.memory[self.procnt] {
+        let (mask, opcode) = self.instruction();
+        match opcode {
             1 => {
-                let replacement_pos = self.memory[self.procnt + 3];
-                let (in1, in2) = (self.memory[self.procnt + 1], self.memory[self.procnt + 2]);
-                self.memory[replacement_pos] = self.memory[in1] + self.memory[in2];
+                let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
+                let p = self.params(2, mask);
+                self.memory[replacement_pos as usize] = p[0] + p[1];
                 self.procnt += 4;
             }
             2 => {
-                let replacement_pos = self.memory[self.procnt + 3];
-                let (in1, in2) = (self.memory[self.procnt + 1], self.memory[self.procnt + 2]);
-                self.memory[replacement_pos] = self.memory[in1] * self.memory[in2];
+                let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
+                let p = self.params(2, mask);
+                self.memory[replacement_pos as usize] = p[0] * p[1];
                 self.procnt += 4;
+            }
+            3 => {
+                let replacement_pos = self.memory[self.procnt as usize + 1]; // never immediate mode
+                self.memory[replacement_pos as usize] =
+                    self.input.pop().expect("Input was taken but none is left");
+                self.procnt += 2;
+            }
+            4 => {
+                let p = self.params(1, mask);
+                self.output.push(p[0]);
+                self.procnt += 2;
             }
             99 => self.halted = true,
             n => panic!("Unknown opcode {}", n),
         }
     }
 
-    fn run(&mut self) -> isize {
+    fn run(&mut self) -> &Vec<isize> {
         while !self.halted {
             self.one_step();
         }
-        self.memory[0]
+        &self.output
     }
 
-    fn instruction(ins: isize) -> (Mask, Opcode) {
-        let opcode = ins % 100;
-        
+    fn instruction(&self) -> (Mask, Opcode) {
+        let opcode = self.memory[self.procnt as usize] % 100;
+        let mut mask = Vec::new();
+        let mut digits = self.memory[self.procnt as usize] / 100;
+        while digits > 0 {
+            mask.push(match digits % 10 {
+                0 => Mode::Position,
+                _ => Mode::Immediate,
+            });
+            digits /= 10;
+        }
+        (Mask(mask), opcode)
     }
 
-    type Opcode = isize;
-    type Mask = Vec<Mode>;
-    enum Mode {
-        Direct,
-        Reference,
+    fn read(&self, operand: isize, mode: &Mode) -> isize {
+        match &mode {
+            Mode::Immediate => operand,
+            Mode::Position => self.memory[operand as usize],
+        }
+    }
+
+    fn params(&self, amount: usize, mask: Mask) -> Vec<isize> {
+        (0..amount)
+            .map(|i| self.read(self.memory[self.procnt as usize + i + 1], mask.get(i)))
+            .collect()
+    }
+}
+
+type Opcode = isize;
+struct Mask(Vec<Mode>);
+
+#[derive(Debug, Copy, Clone)]
+enum Mode {
+    Immediate,
+    Position,
+}
+
+impl Mask {
+    fn get(&self, idx: usize) -> &Mode {
+        self.0.get(idx).unwrap_or(&Mode::Position)
     }
 }
 
 impl From<Vec<isize>> for Computer {
     fn from(v: Vec<isize>) -> Self {
-        Computer::new(v, Vec::new());
+        Computer::new(v, Vec::new())
     }
 }
 
 #[aoc(day5, part1)]
 fn solver1(input: &[isize]) -> isize {
-    Computer::new(input.to_vec(), vec![1])
+    Computer::new(input.to_vec(), vec![1]).run()[0]
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -87,6 +128,9 @@ mod tests {
 
     #[test]
     fn test_run() {
-        assert_eq!(Computer::from(vec![1usize, 0, 0, 0, 99]).run(), 2);
+        assert_eq!(
+            Computer::from(vec![1002, 4, 3, 4, 33]).run(),
+            &Vec::<isize>::new()
+        );
     }
 }
