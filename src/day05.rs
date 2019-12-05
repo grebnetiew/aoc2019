@@ -1,3 +1,4 @@
+use crate::intcode::Computer;
 use aoc_runner_derive::{aoc, aoc_generator};
 use std::num::ParseIntError;
 
@@ -11,8 +12,6 @@ fn one_line_many_numbers(input: &str) -> Result<Vec<isize>, ParseIntError> {
         .map(|n| n.parse())
         .collect()
 }
-
-use crate::intcode::Computer;
 
 #[aoc(day5, part1)]
 fn solver1(input: &[isize]) -> isize {

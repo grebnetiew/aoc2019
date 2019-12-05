@@ -108,12 +108,16 @@ impl Computer {
             .map(|i| self.read(self.memory[self.procnt as usize + i + 1], mask.get(i)))
             .collect()
     }
+
+    pub fn mem_first(&self) -> isize {
+        self.memory[0]
+    }
 }
 
-#[derive(Debug, Copy, Clone)]
-enum Mode {
-    Immediate,
-    Position,
+impl From<Vec<isize>> for Computer {
+    fn from(v: Vec<isize>) -> Self {
+        Computer::new(v, Vec::new())
+    }
 }
 
 type Opcode = isize;
@@ -125,8 +129,8 @@ impl Mask {
     }
 }
 
-impl From<Vec<isize>> for Computer {
-    fn from(v: Vec<isize>) -> Self {
-        Computer::new(v, Vec::new())
-    }
+#[derive(Debug, Copy, Clone)]
+enum Mode {
+    Immediate,
+    Position,
 }
