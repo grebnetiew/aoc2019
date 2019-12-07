@@ -82,6 +82,13 @@ impl Computer {
         &self.output
     }
 
+    pub fn run_until_output(&mut self) -> Option<isize> {
+        while (!self.halted) && self.output.len() == 0 {
+            self.one_step();
+        }
+        self.output.pop()
+    }
+
     fn instruction(&self) -> (Mask, Opcode) {
         let opcode = self.memory[self.procnt as usize] % 100;
         let mut mask = Vec::new();
@@ -111,6 +118,10 @@ impl Computer {
 
     pub fn mem_first(&self) -> isize {
         self.memory[0]
+    }
+
+    pub fn more_input(&mut self, i: isize) {
+        self.input.insert(0, i)
     }
 }
 
