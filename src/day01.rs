@@ -80,19 +80,19 @@ mod tests {
         assert_eq!(solver1(&[12]), 2);
         assert_eq!(solver1(&[14]), 2);
         assert_eq!(solver1(&[1969]), 654);
-        assert_eq!(solver1(&[100756]), 33583);
+        assert_eq!(solver1(&[100_756]), 33583);
     }
 
     #[test]
     fn part2_example() {
         assert_eq!(solver2(&[14]), 2);
         assert_eq!(solver2(&[1969]), 966);
-        assert_eq!(solver2(&[100756]), 50346);
+        assert_eq!(solver2(&[100_756]), 50346);
         assert_eq!(solver2a(&[14]), 2);
         assert_eq!(solver2a(&[1969]), 966);
-        assert_eq!(solver2a(&[100756]), 50346);
+        assert_eq!(solver2a(&[100_756]), 50346);
         assert_eq!(solver2b(&[14]), 2);
         assert_eq!(solver2b(&[1969]), 966);
-        assert_eq!(solver2b(&[100756]), 50346);
+        assert_eq!(solver2b(&[100_756]), 50346);
     }
 }

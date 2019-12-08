@@ -29,7 +29,7 @@ fn solver1(input: &[isize]) -> isize {
 
 #[aoc(day2, part2)]
 fn solver2(input: &[isize]) -> Option<isize> {
-    let desired_output = 19690720;
+    let desired_output = 19_690_720;
     for i in 0..100 {
         for j in 0..100 {
             if compute(input, i, j) == desired_output {

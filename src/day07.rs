@@ -25,8 +25,8 @@ fn solver1(program: &[isize]) -> isize {
     heap_recursive(&mut possible_settings, |permutation| {
         let mut last_out = 0;
         // Chain the amplifiers to each other
-        for i in 0..5 {
-            last_out = Computer::new(program.to_vec(), vec![last_out, permutation[i]])
+        for &setting in permutation.iter() {
+            last_out = Computer::new(program.to_vec(), vec![last_out, setting])
                 .run_until_output()
                 .unwrap();
         }
@@ -46,16 +46,16 @@ fn solver2(program: &[isize]) -> isize {
     heap_recursive(&mut possible_settings, |permutation| {
         // Set up five amplifiers for the feedback loop
         let mut amps = Vec::with_capacity(5);
-        for i in 0..5 {
-            amps.push(Computer::new(program.to_vec(), vec![permutation[i]]));
+        for &setting in permutation.iter() {
+            amps.push(Computer::new(program.to_vec(), vec![setting]));
         }
 
         // Keep running them in a chain until one of them halts
         let mut last_out = 0;
         'outer: loop {
-            for i in 0..5 {
-                amps[i].more_input(last_out);
-                match amps[i].run_until_output() {
+            for amp in amps.iter_mut() {
+                amp.more_input(last_out);
+                match amp.run_until_output() {
                     Some(output) => last_out = output,
                     None => break 'outer,
                 }
@@ -101,7 +101,7 @@ mod tests {
                 3, 26, 1001, 26, -4, 26, 3, 27, 1002, 27, 2, 27, 1, 27, 26, 27, 4, 27, 1001, 28,
                 -1, 28, 1005, 28, 6, 99, 0, 0, 5
             ]),
-            139629729
+            139_629_729
         );
         assert_eq!(
             solver2(&[

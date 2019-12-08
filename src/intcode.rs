@@ -12,7 +12,7 @@ impl Computer {
             memory: program_data,
             procnt: 0,
             halted: false,
-            input: input,
+            input,
             output: Vec::new(),
         }
     }
@@ -83,7 +83,7 @@ impl Computer {
     }
 
     pub fn run_until_output(&mut self) -> Option<isize> {
-        while (!self.halted) && self.output.len() == 0 {
+        while (!self.halted) && self.output.is_empty() {
             self.one_step();
         }
         self.output.pop()
@@ -103,7 +103,7 @@ impl Computer {
         (Mask(mask), opcode)
     }
 
-    fn read(&self, operand: isize, mode: &Mode) -> isize {
+    fn read(&self, operand: isize, mode: Mode) -> isize {
         match &mode {
             Mode::Immediate => operand,
             Mode::Position => self.memory[operand as usize],
@@ -112,7 +112,7 @@ impl Computer {
 
     fn params(&self, amount: usize, mask: Mask) -> Vec<isize> {
         (0..amount)
-            .map(|i| self.read(self.memory[self.procnt as usize + i + 1], mask.get(i)))
+            .map(|i| self.read(self.memory[self.procnt as usize + i + 1], *mask.get(i)))
             .collect()
     }
 

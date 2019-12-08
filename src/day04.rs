@@ -14,8 +14,8 @@ fn number_range(input: &str) -> Vec<Vec<u8>> {
 // The dumb/iterative method works. I am on a time constraint and might do a cerebral
 // solution later on :)
 #[aoc(day4, part1, Hadouken)]
-fn solver1(input: &Vec<Vec<u8>>) -> u32 {
-    let nine = '9' as u8;
+fn solver1(input: &[Vec<u8>]) -> u32 {
+    let nine = b'9';
     let mut count = 0;
     for i1 in input[0][0]..input[1][0] {
         for i2 in i1..=nine {
@@ -40,8 +40,8 @@ fn solver1(input: &Vec<Vec<u8>>) -> u32 {
 }
 
 #[aoc(day4, part2, Hadouken)]
-fn solver2(input: &Vec<Vec<u8>>) -> u32 {
-    let nine = '9' as u8;
+fn solver2(input: &[Vec<u8>]) -> u32 {
+    let nine = b'9';
     let mut count = 0;
     for i1 in input[0][0]..input[1][0] {
         for i2 in i1..=nine {

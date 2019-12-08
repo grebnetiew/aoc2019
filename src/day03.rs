@@ -13,7 +13,7 @@ enum Direction {
 }
 
 impl Direction {
-    fn apply_one_step_to(&self, x: &mut i32, y: &mut i32) {
+    fn apply_one_step_to(self, x: &mut i32, y: &mut i32) {
         match self {
             Direction::Left => *x -= 1,
             Direction::Right => *x += 1,
@@ -64,7 +64,7 @@ fn lines_to_moves(input: &str) -> Result<Vec<Vec<Move>>, Error> {
         .collect()
 }
 
-fn crossings(input: &Vec<Vec<Move>>) -> HashMap<(i32, i32), u32> {
+fn crossings(input: &[Vec<Move>]) -> HashMap<(i32, i32), u32> {
     let mut hm = HashMap::new();
     // add first path
     let (mut x, mut y) = (0i32, 0i32);
@@ -97,7 +97,7 @@ fn crossings(input: &Vec<Vec<Move>>) -> HashMap<(i32, i32), u32> {
 }
 
 #[aoc(day3, part1)]
-fn solver1(input: &Vec<Vec<Move>>) -> u32 {
+fn solver1(input: &[Vec<Move>]) -> u32 {
     crossings(input)
         .keys()
         .map(|&(x, y)| x.abs() as u32 + y.abs() as u32)
@@ -106,7 +106,7 @@ fn solver1(input: &Vec<Vec<Move>>) -> u32 {
 }
 
 #[aoc(day3, part2)]
-fn solver2(input: &Vec<Vec<Move>>) -> u32 {
+fn solver2(input: &[Vec<Move>]) -> u32 {
     *crossings(input).values().min().unwrap()
 }
 

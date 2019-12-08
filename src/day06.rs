@@ -17,7 +17,7 @@ fn orbit_parser(input: &str) -> Vec<(String, String)> {
         .collect()
 }
 
-fn count_depth(hm: &HashMap<String, String>, key: &String) -> usize {
+fn count_depth(hm: &HashMap<String, String>, key: &str) -> usize {
     match hm.get(key) {
         None => 0,
         Some(value) => 1 + count_depth(hm, &value),
@@ -34,7 +34,7 @@ fn solver1(input: &[(String, String)]) -> usize {
     total_orbits
 }
 
-fn ancestors<'a>(hm: &'a HashMap<String, String>, mut key: &'a String) -> Vec<&'a String> {
+fn ancestors<'a>(hm: &'a HashMap<String, String>, mut key: &'a str) -> Vec<&'a str> {
     let mut ancestors = Vec::new();
     while hm.contains_key(key) {
         key = &hm[key];

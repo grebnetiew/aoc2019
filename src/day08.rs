@@ -1,4 +1,5 @@
 use aoc_runner_derive::{aoc, aoc_generator};
+use std::fmt;
 
 #[aoc_generator(day8)]
 fn one_line_many_numbers(input: &str) -> Vec<u32> {
@@ -34,10 +35,11 @@ impl Sif {
     fn px_unchecked(&self, layer: u32, x: u32, y: u32) -> u32 {
         self.pixels[(layer * (self.width * self.height) + y * self.width + x) as usize]
     }
+}
 
-    fn to_string(&self) -> String {
-        let mut output = "\n".to_string();
-        output.reserve(((self.width + 1) * self.height) as usize);
+impl fmt::Display for Sif {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        writeln!(f)?;
 
         for y in 0..self.height {
             for x in 0..self.width {
@@ -48,11 +50,11 @@ impl Sif {
                         break;
                     }
                 }
-                output += if color == 1 { "#" } else { " " };
+                write!(f, "{}", if color == 1 { "#" } else { " " })?;
             }
-            output += "\n";
+            writeln!(f)?;
         }
-        output
+        Ok(())
     }
 }
 
