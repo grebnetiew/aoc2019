@@ -1,6 +1,7 @@
 pub struct Computer {
     memory: Vec<isize>,
     procnt: isize,
+    relbse: isize,
     halted: bool,
     input: Vec<isize>,
     output: Vec<isize>,
@@ -11,6 +12,7 @@ impl Computer {
         Self {
             memory: program_data,
             procnt: 0,
+            relbse: 0,
             halted: false,
             input,
             output: Vec::new(),
@@ -21,29 +23,29 @@ impl Computer {
         match opcode {
             1 => {
                 let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
-                let p = self.params(2, mask);
-                self.memory[replacement_pos as usize] = p[0] + p[1];
+                let p = self.params(2, &mask);
+                self.write(replacement_pos, *mask.get(2), p[0] + p[1]);
                 self.procnt += 4;
             }
             2 => {
                 let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
-                let p = self.params(2, mask);
-                self.memory[replacement_pos as usize] = p[0] * p[1];
+                let p = self.params(2, &mask);
+                self.write(replacement_pos, *mask.get(2), p[0] * p[1]);
                 self.procnt += 4;
             }
             3 => {
                 let replacement_pos = self.memory[self.procnt as usize + 1]; // never immediate mode
-                self.memory[replacement_pos as usize] =
-                    self.input.pop().expect("Input was taken but none is left");
+                let value = self.input.pop().expect("Input was taken but none is left");
+                self.write(replacement_pos, *mask.get(0), value);
                 self.procnt += 2;
             }
             4 => {
-                let p = self.params(1, mask);
+                let p = self.params(1, &mask);
                 self.output.push(p[0]);
                 self.procnt += 2;
             }
             5 => {
-                let p = self.params(2, mask);
+                let p = self.params(2, &mask);
                 if p[0] != 0 {
                     self.procnt = p[1];
                 } else {
@@ -51,7 +53,7 @@ impl Computer {
                 }
             }
             6 => {
-                let p = self.params(2, mask);
+                let p = self.params(2, &mask);
                 if p[0] == 0 {
                     self.procnt = p[1];
                 } else {
@@ -60,15 +62,28 @@ impl Computer {
             }
             7 => {
                 let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
-                let p = self.params(2, mask);
-                self.memory[replacement_pos as usize] = if p[0] < p[1] { 1 } else { 0 };
+                let p = self.params(2, &mask);
+                self.write(
+                    replacement_pos,
+                    *mask.get(2),
+                    if p[0] < p[1] { 1 } else { 0 },
+                );
                 self.procnt += 4;
             }
             8 => {
                 let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
-                let p = self.params(2, mask);
-                self.memory[replacement_pos as usize] = if p[0] == p[1] { 1 } else { 0 };
+                let p = self.params(2, &mask);
+                self.write(
+                    replacement_pos,
+                    *mask.get(2),
+                    if p[0] == p[1] { 1 } else { 0 },
+                );
                 self.procnt += 4;
+            }
+            9 => {
+                let p = self.params(1, &mask);
+                self.relbse += p[0];
+                self.procnt += 2;
             }
             99 => self.halted = true,
             n => panic!("Unknown opcode {}", n),
@@ -96,7 +111,8 @@ impl Computer {
         while digits > 0 {
             mask.push(match digits % 10 {
                 0 => Mode::Position,
-                _ => Mode::Immediate,
+                1 => Mode::Immediate,
+                _ => Mode::Relative,
             });
             digits /= 10;
         }
@@ -106,14 +122,33 @@ impl Computer {
     fn read(&self, operand: isize, mode: Mode) -> isize {
         match &mode {
             Mode::Immediate => operand,
-            Mode::Position => self.memory[operand as usize],
+            Mode::Position => *self.memory.get(operand as usize).unwrap_or(&0),
+            Mode::Relative => *self
+                .memory
+                .get((self.relbse + operand) as usize)
+                .unwrap_or(&0),
         }
     }
 
-    fn params(&self, amount: usize, mask: Mask) -> Vec<isize> {
+    fn params(&self, amount: usize, mask: &Mask) -> Vec<isize> {
         (0..amount)
             .map(|i| self.read(self.memory[self.procnt as usize + i + 1], *mask.get(i)))
             .collect()
+    }
+
+    fn write(&mut self, mut addr: isize, mode: Mode, value: isize) {
+        match &mode {
+            Mode::Immediate => panic!(
+                "Attempted to write {} to an immediate mode address {}",
+                value, addr
+            ),
+            Mode::Position => {}
+            Mode::Relative => addr += self.relbse,
+        }
+        if self.memory.len() <= addr as usize {
+            self.memory.resize_with(addr as usize + 1, Default::default);
+        }
+        self.memory[addr as usize] = value;
     }
 
     pub fn mem_first(&self) -> isize {
@@ -144,4 +179,5 @@ impl Mask {
 enum Mode {
     Immediate,
     Position,
+    Relative,
 }
