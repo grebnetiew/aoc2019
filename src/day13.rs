@@ -1,7 +1,6 @@
 use crate::intcode::Computer;
 use aoc_runner_derive::{aoc, aoc_generator};
 use std::cell::RefCell;
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::num::ParseIntError;
 
@@ -36,13 +35,12 @@ impl Tile {
 fn count_blocks(program: &[isize]) -> usize {
     let mut arcade = Computer::new(program.to_vec(), vec![]);
     let mut hm = HashMap::<(isize, isize), Tile>::new();
-    while let Some(x) = arcade.run_until_output() {
-        let maybe_y = arcade.run_until_output();
-        if let Some(t) = arcade.run_until_output() {
-            // The computer will not output None (which means it has halted)
-            // and then output Some() again, so we can safely unwrap y
-            hm.insert((x, maybe_y.unwrap()), Tile::new(t));
-        }
+    while let (Some(x), Some(y), Some(t)) = (
+        arcade.run_until_output(),
+        arcade.run_until_output(),
+        arcade.run_until_output(),
+    ) {
+        hm.insert((x, y), Tile::new(t));
     }
     hm.iter().filter(|&(_, &v)| v == Tile::Block).count()
 }
@@ -56,30 +54,27 @@ fn breakout(program: &[isize]) -> isize {
     let mut hm = HashMap::<(isize, isize), Tile>::new();
 
     let mut score = 0;
-    let paddle_x = RefCell::new(0);
-    let ball_x = RefCell::new(0);
+    let paddle_x = RefCell::new(0isize);
+    let ball_x = RefCell::new(0isize);
 
     // Joystick position depends on the ball and paddle
-    let joystick = || match paddle_x.borrow().cmp(&ball_x.borrow()) {
-        Ordering::Less => 1,
-        Ordering::Greater => -1,
-        Ordering::Equal => 0,
-    };
+    let joystick = || (*ball_x.borrow() - *paddle_x.borrow()).signum();
 
-    while let Some(x) = arcade.run_until_output_with(joystick) {
-        let maybe_y = arcade.run_until_output_with(joystick);
-        if let Some(t) = arcade.run_until_output_with(joystick) {
-            if x == -1 {
-                score = t;
-            } else {
-                let t = Tile::new(t);
-                match t {
-                    Tile::Ball => *ball_x.borrow_mut() = x,
-                    Tile::HPaddle => *paddle_x.borrow_mut() = x,
-                    _ => {}
-                }
-                hm.insert((x, maybe_y.unwrap()), t);
+    while let (Some(x), Some(y), Some(t)) = (
+        arcade.run_until_output_with(joystick),
+        arcade.run_until_output_with(joystick),
+        arcade.run_until_output_with(joystick),
+    ) {
+        if x == -1 {
+            score = t;
+        } else {
+            let t = Tile::new(t);
+            match t {
+                Tile::Ball => *ball_x.borrow_mut() = x,
+                Tile::HPaddle => *paddle_x.borrow_mut() = x,
+                _ => {}
             }
+            hm.insert((x, y), t);
         }
     }
     score
