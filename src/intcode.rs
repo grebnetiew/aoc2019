@@ -126,28 +126,29 @@ impl Computer {
             .collect()
     }
 
-    // Write one value to the address in the specified mode. Immediate mode
-    // can not be used here, and will cause a panic if supplied.
-    fn write(&mut self, mut addr: i64, mode: Mode, value: i64) {
-        match &mode {
+    // Write one value in the specified mode to the address given by the
+    // parameter found <offset> from the current program counter. Immediate
+    // mode can not be used here, and will cause a panic if supplied.
+    fn write(&mut self, offset: usize, value: i64) {
+        // Determine the write address. These are counted from the start in
+        // Position mode, and from the relative base in Relative mode.
+        let mut replacement_pos = match self.mask().get(offset - 1) {
             Mode::Immediate => panic!(
-                "Attempted to write {} to an immediate mode address {}",
-                value, addr
+                "Attempted to write {} in immediate mode at PC = {}",
+                value, self.procnt
             ),
-            Mode::Position => {}
-            Mode::Relative => addr += self.relbse,
-        }
-        if self.memory.len() <= addr as usize {
-            self.memory.resize_with(addr as usize + 1, Default::default);
-        }
-        self.memory[addr as usize] = value;
-    }
+            Mode::Position => 0,
+            Mode::Relative => self.relbse,
+        };
+        // Add the value in the 'destination' memory slot
+        replacement_pos += self.memory[self.procnt as usize + offset];
 
-    // Write a value to a place in memory, given by the parameter found <amount>
-    // from the current program counter.
-    fn simple_write_operator(&mut self, amount: usize, value: i64) {
-        let replacement_pos = self.memory[self.procnt as usize + amount]; // never immediate mode
-        self.write(replacement_pos, *self.mask().get(amount - 1), value);
+        // Ensure we have enough memory
+        if self.memory.len() <= replacement_pos as usize {
+            self.memory
+                .resize_with(replacement_pos as usize + 1, Default::default);
+        }
+        self.memory[replacement_pos as usize] = value;
     }
 
     // Operators supported by the VM
@@ -159,7 +160,7 @@ impl Computer {
         F: Fn(i64, i64) -> i64,
     {
         let p = self.params(2);
-        self.simple_write_operator(3, f(p[0], p[1]));
+        self.write(3, f(p[0], p[1]));
         self.procnt += 4;
     }
 
@@ -181,7 +182,7 @@ impl Computer {
     // the only parameter
     fn get_input(&mut self) {
         let value = self.input.pop().expect("Input was taken but none is left");
-        self.simple_write_operator(1, value);
+        self.write(1, value);
         self.procnt += 2;
     }
 
