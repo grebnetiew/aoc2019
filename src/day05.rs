@@ -3,12 +3,12 @@ use aoc_runner_derive::{aoc, aoc_generator};
 use std::num::ParseIntError;
 
 #[aoc_generator(day5)]
-fn one_line_many_numbers(input: &str) -> Result<Vec<isize>, ParseIntError> {
+fn one_line_many_numbers(input: &str) -> Result<Vec<i64>, ParseIntError> {
     input.split(',').map(str::parse).collect()
 }
 
 #[aoc(day5, part1)]
-fn solver1(input: &[isize]) -> isize {
+fn solver1(input: &[i64]) -> i64 {
     *Computer::new(input.to_vec(), vec![1])
         .run()
         .last()
@@ -16,7 +16,7 @@ fn solver1(input: &[isize]) -> isize {
 }
 
 #[aoc(day5, part2)]
-fn solver2(input: &[isize]) -> isize {
+fn solver2(input: &[i64]) -> i64 {
     *Computer::new(input.to_vec(), vec![5])
         .run()
         .last()
@@ -29,10 +29,7 @@ mod tests {
 
     #[test]
     fn test_run1() {
-        assert_eq!(
-            Computer::from(vec![1002, 4, 3, 4, 33]).run(),
-            &Vec::<isize>::new()
-        );
+        assert_eq!(Computer::from(vec![1002, 4, 3, 4, 33]).run(), &[]);
         assert_eq!(Computer::new(vec![3, 0, 4, 0, 99], vec![37]).run()[0], 37);
         assert_eq!(solver1(&[3, 0, 4, 0, 99]), 1);
     }

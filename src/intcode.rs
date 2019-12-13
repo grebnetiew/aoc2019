@@ -1,14 +1,14 @@
 pub struct Computer {
-    memory: Vec<isize>,
-    procnt: isize,
-    relbse: isize,
+    memory: Vec<i64>,
+    procnt: i64,
+    relbse: i64,
     halted: bool,
-    input: Vec<isize>,
-    output: Vec<isize>,
+    input: Vec<i64>,
+    output: Vec<i64>,
 }
 
 impl Computer {
-    pub fn new(program_data: Vec<isize>, input: Vec<isize>) -> Self {
+    pub fn new(program_data: Vec<i64>, input: Vec<i64>) -> Self {
         Self {
             memory: program_data,
             procnt: 0,
@@ -90,23 +90,23 @@ impl Computer {
         }
     }
 
-    pub fn run(&mut self) -> &Vec<isize> {
+    pub fn run(&mut self) -> &Vec<i64> {
         while !self.halted {
             self.one_step();
         }
         &self.output
     }
 
-    pub fn run_until_output(&mut self) -> Option<isize> {
+    pub fn run_until_output(&mut self) -> Option<i64> {
         while (!self.halted) && self.output.is_empty() {
             self.one_step();
         }
         self.output.pop()
     }
 
-    pub fn run_until_output_with<F>(&mut self, f: F) -> Option<isize>
+    pub fn run_until_output_with<F>(&mut self, f: F) -> Option<i64>
     where
-        F: Fn() -> isize,
+        F: Fn() -> i64,
     {
         self.input.clear();
         while (!self.halted) && self.output.is_empty() {
@@ -133,7 +133,7 @@ impl Computer {
         (Mask(mask), opcode)
     }
 
-    fn read(&self, operand: isize, mode: Mode) -> isize {
+    fn read(&self, operand: i64, mode: Mode) -> i64 {
         match &mode {
             Mode::Immediate => operand,
             Mode::Position => *self.memory.get(operand as usize).unwrap_or(&0),
@@ -144,13 +144,13 @@ impl Computer {
         }
     }
 
-    fn params(&self, amount: usize, mask: &Mask) -> Vec<isize> {
+    fn params(&self, amount: usize, mask: &Mask) -> Vec<i64> {
         (0..amount)
             .map(|i| self.read(self.memory[self.procnt as usize + i + 1], *mask.get(i)))
             .collect()
     }
 
-    fn write(&mut self, mut addr: isize, mode: Mode, value: isize) {
+    fn write(&mut self, mut addr: i64, mode: Mode, value: i64) {
         match &mode {
             Mode::Immediate => panic!(
                 "Attempted to write {} to an immediate mode address {}",
@@ -165,22 +165,22 @@ impl Computer {
         self.memory[addr as usize] = value;
     }
 
-    pub fn mem_first(&self) -> isize {
+    pub fn mem_first(&self) -> i64 {
         self.memory[0]
     }
 
-    pub fn more_input(&mut self, i: isize) {
+    pub fn more_input(&mut self, i: i64) {
         self.input.insert(0, i)
     }
 }
 
-impl From<Vec<isize>> for Computer {
-    fn from(v: Vec<isize>) -> Self {
+impl From<Vec<i64>> for Computer {
+    fn from(v: Vec<i64>) -> Self {
         Computer::new(v, Vec::new())
     }
 }
 
-type Opcode = isize;
+type Opcode = i64;
 struct Mask(Vec<Mode>);
 
 impl Mask {

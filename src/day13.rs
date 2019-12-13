@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::num::ParseIntError;
 
 #[aoc_generator(day13)]
-fn one_line_many_numbers(input: &str) -> Result<Vec<isize>, ParseIntError> {
+fn one_line_many_numbers(input: &str) -> Result<Vec<i64>, ParseIntError> {
     input.split(',').map(str::parse).collect()
 }
 
@@ -19,7 +19,7 @@ enum Tile {
 }
 
 impl Tile {
-    fn new(n: isize) -> Self {
+    fn new(n: i64) -> Self {
         match n {
             0 => Tile::Empty,
             1 => Tile::Wall,
@@ -32,9 +32,9 @@ impl Tile {
 }
 
 #[aoc(day13, part1)]
-fn count_blocks(program: &[isize]) -> usize {
+fn count_blocks(program: &[i64]) -> usize {
     let mut arcade = Computer::new(program.to_vec(), vec![]);
-    let mut hm = HashMap::<(isize, isize), Tile>::new();
+    let mut hm = HashMap::<(i64, i64), Tile>::new();
     while let (Some(x), Some(y), Some(t)) = (
         arcade.run_until_output(),
         arcade.run_until_output(),
@@ -46,16 +46,16 @@ fn count_blocks(program: &[isize]) -> usize {
 }
 
 #[aoc(day13, part2)]
-fn breakout(program: &[isize]) -> isize {
+fn breakout(program: &[i64]) -> i64 {
     let mut program = program.to_vec();
     program[0] = 2; // insert two coins! greedy
     let mut arcade = Computer::new(program, vec![]);
 
-    let mut hm = HashMap::<(isize, isize), Tile>::new();
+    let mut hm = HashMap::<(i64, i64), Tile>::new();
 
     let mut score = 0;
-    let paddle_x = RefCell::new(0isize);
-    let ball_x = RefCell::new(0isize);
+    let paddle_x = RefCell::new(0i64);
+    let ball_x = RefCell::new(0i64);
 
     // Joystick position depends on the ball and paddle
     let joystick = || (*ball_x.borrow() - *paddle_x.borrow()).signum();

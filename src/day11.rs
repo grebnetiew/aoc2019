@@ -6,13 +6,13 @@ use std::collections::HashMap;
 use std::num::ParseIntError;
 
 #[aoc_generator(day11)]
-fn one_line_many_numbers(input: &str) -> Result<Vec<isize>, ParseIntError> {
+fn one_line_many_numbers(input: &str) -> Result<Vec<i64>, ParseIntError> {
     input.split(',').map(str::parse).collect()
 }
 
 #[aoc(day11, part1)]
-fn solver1(program: &[isize]) -> usize {
-    let mut hm = HashMap::<(isize, isize), isize>::new();
+fn solver1(program: &[i64]) -> usize {
+    let mut hm = HashMap::<(i64, i64), i64>::new();
     let (mut x, mut y, mut dir) = (0, 0, 0);
     let mut robot = Computer::new(program.to_vec(), vec![]);
     while let Some(new_color) = robot.run_until_output_with(|| *hm.get(&(x, y)).unwrap_or(&0)) {
@@ -33,8 +33,8 @@ fn solver1(program: &[isize]) -> usize {
 }
 
 #[aoc(day11, part2)]
-fn solver2(program: &[isize]) -> String {
-    let mut hm = HashMap::<(isize, isize), isize>::new();
+fn solver2(program: &[i64]) -> String {
+    let mut hm = HashMap::<(i64, i64), i64>::new();
     hm.insert((0, 0), 1);
     let (mut x, mut y, mut xmin, mut ymin, mut xmax, mut ymax, mut dir) = (0, 0, 0, 0, 0, 0, 0);
     let mut robot = Computer::new(program.to_vec(), vec![]);

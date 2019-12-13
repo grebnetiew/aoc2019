@@ -6,12 +6,12 @@ use permutohedron::heap_recursive;
 use std::num::ParseIntError;
 
 #[aoc_generator(day7)]
-fn one_line_many_numbers(input: &str) -> Result<Vec<isize>, ParseIntError> {
+fn one_line_many_numbers(input: &str) -> Result<Vec<i64>, ParseIntError> {
     input.split(',').map(str::parse).collect()
 }
 
 #[aoc(day7, part1)]
-fn solver1(program: &[isize]) -> isize {
+fn solver1(program: &[i64]) -> i64 {
     let mut max_thrust = 0;
     let mut possible_settings = [0, 1, 2, 3, 4];
 
@@ -33,7 +33,7 @@ fn solver1(program: &[isize]) -> isize {
 }
 
 #[aoc(day7, part2)]
-fn solver2(program: &[isize]) -> isize {
+fn solver2(program: &[i64]) -> i64 {
     let mut max_thrust = 0;
     let mut possible_settings = [5, 6, 7, 8, 9];
 

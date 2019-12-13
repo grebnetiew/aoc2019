@@ -3,11 +3,11 @@ use aoc_runner_derive::{aoc, aoc_generator};
 use std::num::ParseIntError;
 
 #[aoc_generator(day2)]
-fn one_line_many_numbers(input: &str) -> Result<Vec<isize>, ParseIntError> {
+fn one_line_many_numbers(input: &str) -> Result<Vec<i64>, ParseIntError> {
     input.split(',').map(str::parse).collect()
 }
 
-fn compute(input: &[isize], i: isize, j: isize) -> isize {
+fn compute(input: &[i64], i: i64, j: i64) -> i64 {
     let mut modified_input = input.to_owned();
     modified_input[1] = i;
     modified_input[2] = j;
@@ -17,12 +17,12 @@ fn compute(input: &[isize], i: isize, j: isize) -> isize {
 }
 
 #[aoc(day2, part1)]
-fn solver1(input: &[isize]) -> isize {
+fn solver1(input: &[i64]) -> i64 {
     compute(input, 12, 2)
 }
 
 #[aoc(day2, part2)]
-fn solver2(input: &[isize]) -> Option<isize> {
+fn solver2(input: &[i64]) -> Option<i64> {
     let desired_output = 19_690_720;
     for i in 0..100 {
         for j in 0..100 {
