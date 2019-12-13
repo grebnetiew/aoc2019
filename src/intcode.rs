@@ -19,64 +19,25 @@ impl Computer {
         }
     }
     fn one_step(&mut self) {
-        let (mask, opcode) = self.instruction();
-        match opcode {
-            1 => {
-                let p = self.params(2, &mask);
-                self.simple_write_operator(3, &mask, p[0] + p[1]);
-                self.procnt += 4;
-            }
-            2 => {
-                let p = self.params(2, &mask);
-                self.simple_write_operator(3, &mask, p[0] * p[1]);
-                self.procnt += 4;
-            }
-            3 => {
-                let value = self.input.pop().expect("Input was taken but none is left");
-                self.simple_write_operator(1, &mask, value);
-                self.procnt += 2;
-            }
-            4 => {
-                let p = self.params(1, &mask);
-                self.output.push(p[0]);
-                self.procnt += 2;
-            }
-            5 => {
-                let p = self.params(2, &mask);
-                if p[0] != 0 {
-                    self.procnt = p[1];
-                } else {
-                    self.procnt += 3;
-                }
-            }
-            6 => {
-                let p = self.params(2, &mask);
-                if p[0] == 0 {
-                    self.procnt = p[1];
-                } else {
-                    self.procnt += 3;
-                }
-            }
-            7 => {
-                let p = self.params(2, &mask);
-                self.simple_write_operator(3, &mask, if p[0] < p[1] { 1 } else { 0 });
-                self.procnt += 4;
-            }
-            8 => {
-                let p = self.params(2, &mask);
-                self.simple_write_operator(3, &mask, if p[0] == p[1] { 1 } else { 0 });
-                self.procnt += 4;
-            }
-            9 => {
-                let p = self.params(1, &mask);
-                self.relbse += p[0];
-                self.procnt += 2;
-            }
+        match self.opcode() {
+            1 => self.bin_op(|a, b| a + b),
+            2 => self.bin_op(|a, b| a * b),
+            3 => self.get_input(),
+            4 => self.give_output(),
+            5 => self.jmp_if(|a| a != 0),
+            6 => self.jmp_if(|a| a == 0),
+            7 => self.bin_op(|a, b| if a < b { 1 } else { 0 }),
+            8 => self.bin_op(|a, b| if a == b { 1 } else { 0 }),
+            9 => self.set_relbase(),
             99 => self.halted = true,
             n => panic!("Unknown opcode {}", n),
         }
     }
 
+    // Various modes of running
+
+    // Run until halted, no chance to supply more input.
+    // Output is provided as a Vec at the end.
     pub fn run(&mut self) -> &Vec<i64> {
         while !self.halted {
             self.one_step();
@@ -84,6 +45,8 @@ impl Computer {
         &self.output
     }
 
+    // Run until there is one output, and return it.
+    // Returns None if the program halts.
     pub fn run_until_output(&mut self) -> Option<i64> {
         while (!self.halted) && self.output.is_empty() {
             self.one_step();
@@ -91,13 +54,16 @@ impl Computer {
         self.output.pop()
     }
 
+    // Run until there is one output, and return it.
+    // Supply a function that is called whenever input is needed.
+    // This clears the internal input buffer.
     pub fn run_until_output_with<F>(&mut self, f: F) -> Option<i64>
     where
         F: Fn() -> i64,
     {
         self.input.clear();
         while (!self.halted) && self.output.is_empty() {
-            if self.instruction().1 == 3 {
+            if self.opcode() == 3 {
                 self.more_input(f());
             }
             self.one_step();
@@ -105,8 +71,25 @@ impl Computer {
         self.output.pop()
     }
 
-    fn instruction(&self) -> (Mask, Opcode) {
-        let opcode = self.memory[self.procnt as usize] % 100;
+    // Gives the first value in memory. Needed for an early puzzle.
+    pub fn mem_first(&self) -> i64 {
+        self.memory[0]
+    }
+
+    // Supplies more input to be added to the internal buffer.
+    pub fn more_input(&mut self, i: i64) {
+        self.input.insert(0, i)
+    }
+
+    // Information about the current instruction
+
+    // Returns the opcode of the current instruction (removes the mask)
+    fn opcode(&self) -> Opcode {
+        self.memory[self.procnt as usize] % 100
+    }
+
+    // Returns the mask of the current instruction, in parameter order
+    fn mask(&self) -> Mask {
         let mut mask = Vec::new();
         let mut digits = self.memory[self.procnt as usize] / 100;
         while digits > 0 {
@@ -117,9 +100,13 @@ impl Computer {
             });
             digits /= 10;
         }
-        (Mask(mask), opcode)
+        Mask(mask)
     }
 
+    // Low-level reading and writing functionality
+
+    // Read one value in the selected mode. Operand is the address or
+    // value to be read.
     fn read(&self, operand: i64, mode: Mode) -> i64 {
         match &mode {
             Mode::Immediate => operand,
@@ -131,12 +118,16 @@ impl Computer {
         }
     }
 
-    fn params(&self, amount: usize, mask: &Mask) -> Vec<i64> {
+    // Extract the parameters of a function with <amount> parameters
+    fn params(&self, amount: usize) -> Vec<i64> {
+        let mask = self.mask();
         (0..amount)
             .map(|i| self.read(self.memory[self.procnt as usize + i + 1], *mask.get(i)))
             .collect()
     }
 
+    // Write one value to the address in the specified mode. Immediate mode
+    // can not be used here, and will cause a panic if supplied.
     fn write(&mut self, mut addr: i64, mode: Mode, value: i64) {
         match &mode {
             Mode::Immediate => panic!(
@@ -152,17 +143,60 @@ impl Computer {
         self.memory[addr as usize] = value;
     }
 
-    fn simple_write_operator(&mut self, amount: usize, mask: &Mask, value: i64) {
+    // Write a value to a place in memory, given by the parameter found <amount>
+    // from the current program counter.
+    fn simple_write_operator(&mut self, amount: usize, value: i64) {
         let replacement_pos = self.memory[self.procnt as usize + amount]; // never immediate mode
-        self.write(replacement_pos, *mask.get(amount - 1), value);
+        self.write(replacement_pos, *self.mask().get(amount - 1), value);
     }
 
-    pub fn mem_first(&self) -> i64 {
-        self.memory[0]
+    // Operators supported by the VM
+
+    // Standard binary operator. The function supplied is the operation to
+    // be performed.
+    fn bin_op<F>(&mut self, f: F)
+    where
+        F: Fn(i64, i64) -> i64,
+    {
+        let p = self.params(2);
+        self.simple_write_operator(3, f(p[0], p[1]));
+        self.procnt += 4;
     }
 
-    pub fn more_input(&mut self, i: i64) {
-        self.input.insert(0, i)
+    // Standard conditional jump with one parameter. The function supplied
+    // is used to decide whether to jump.
+    fn jmp_if<F>(&mut self, f: F)
+    where
+        F: Fn(i64) -> bool,
+    {
+        let p = self.params(2);
+        if f(p[0]) {
+            self.procnt = p[1];
+        } else {
+            self.procnt += 3;
+        }
+    }
+
+    // Take input from the buffer and put it in the location specified by
+    // the only parameter
+    fn get_input(&mut self) {
+        let value = self.input.pop().expect("Input was taken but none is left");
+        self.simple_write_operator(1, value);
+        self.procnt += 2;
+    }
+
+    // Add the value of the only parameter to the output buffer
+    fn give_output(&mut self) {
+        let p = self.params(1);
+        self.output.push(p[0]);
+        self.procnt += 2;
+    }
+
+    // Adjust the relative base value by the only parameter
+    fn set_relbase(&mut self) {
+        let p = self.params(1);
+        self.relbse += p[0];
+        self.procnt += 2;
     }
 }
 
