@@ -22,21 +22,18 @@ impl Computer {
         let (mask, opcode) = self.instruction();
         match opcode {
             1 => {
-                let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
                 let p = self.params(2, &mask);
-                self.write(replacement_pos, *mask.get(2), p[0] + p[1]);
+                self.simple_write_operator(3, &mask, p[0] + p[1]);
                 self.procnt += 4;
             }
             2 => {
-                let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
                 let p = self.params(2, &mask);
-                self.write(replacement_pos, *mask.get(2), p[0] * p[1]);
+                self.simple_write_operator(3, &mask, p[0] * p[1]);
                 self.procnt += 4;
             }
             3 => {
-                let replacement_pos = self.memory[self.procnt as usize + 1]; // never immediate mode
                 let value = self.input.pop().expect("Input was taken but none is left");
-                self.write(replacement_pos, *mask.get(0), value);
+                self.simple_write_operator(1, &mask, value);
                 self.procnt += 2;
             }
             4 => {
@@ -61,23 +58,13 @@ impl Computer {
                 }
             }
             7 => {
-                let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
                 let p = self.params(2, &mask);
-                self.write(
-                    replacement_pos,
-                    *mask.get(2),
-                    if p[0] < p[1] { 1 } else { 0 },
-                );
+                self.simple_write_operator(3, &mask, if p[0] < p[1] { 1 } else { 0 });
                 self.procnt += 4;
             }
             8 => {
-                let replacement_pos = self.memory[self.procnt as usize + 3]; // never immediate mode
                 let p = self.params(2, &mask);
-                self.write(
-                    replacement_pos,
-                    *mask.get(2),
-                    if p[0] == p[1] { 1 } else { 0 },
-                );
+                self.simple_write_operator(3, &mask, if p[0] == p[1] { 1 } else { 0 });
                 self.procnt += 4;
             }
             9 => {
@@ -163,6 +150,11 @@ impl Computer {
             self.memory.resize_with(addr as usize + 1, Default::default);
         }
         self.memory[addr as usize] = value;
+    }
+
+    fn simple_write_operator(&mut self, amount: usize, mask: &Mask, value: i64) {
+        let replacement_pos = self.memory[self.procnt as usize + amount]; // never immediate mode
+        self.write(replacement_pos, *mask.get(amount - 1), value);
     }
 
     pub fn mem_first(&self) -> i64 {
