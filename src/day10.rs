@@ -7,23 +7,18 @@ use std::collections::HashMap;
 use num_integer::Integer;
 
 #[aoc_generator(day10)]
-fn dotpoundmap(input: &str) -> Vec<(isize, isize)> {
+fn dotpoundmap(input: &str) -> Vec<(i32, i32)> {
     let mut points = Vec::new();
-    let mut y = 0;
-    input.lines().for_each(|line| {
-        let mut x = 0;
-        line.chars().for_each(|ch| {
-            if ch == '#' {
-                points.push((x, y));
-            }
-            x += 1;
-        });
-        y += 1;
-    });
+
+    for (y, line) in input.lines().enumerate() {
+        for (x, _) in line.chars().enumerate().filter(|&(_, ch)| ch == '#') {
+            points.push((x as i32, y as i32));
+        }
+    }
     points
 }
 
-fn find_best_view(input: &[(isize, isize)]) -> ((isize, isize), usize) {
+fn find_best_view(input: &[(i32, i32)]) -> ((i32, i32), usize) {
     let mut best_visible = 0;
     let mut best_visible_pos = (0, 0);
     let (max_x, max_y) = input
@@ -31,7 +26,7 @@ fn find_best_view(input: &[(isize, isize)]) -> ((isize, isize), usize) {
         .fold((0, 0), |mp, p| (max(mp.0, p.0), max(mp.1, p.1)));
 
     for &view_point in input {
-        let mut visible: HashMap<(isize, isize), bool> = input.iter().map(|&p| (p, true)).collect();
+        let mut visible: HashMap<(i32, i32), bool> = input.iter().map(|&p| (p, true)).collect();
         // Check if any are obscured
         for &other_asteroid in input {
             if view_point == other_asteroid {
@@ -47,9 +42,7 @@ fn find_best_view(input: &[(isize, isize)]) -> ((isize, isize), usize) {
                 if !(check_x >= 0 && check_x <= max_x && check_y >= 0 && check_y <= max_y) {
                     break;
                 }
-                if visible.contains_key(&(check_x, check_y)) {
-                    visible.entry((check_x, check_y)).and_modify(|e| *e = false);
-                }
+                visible.entry((check_x, check_y)).and_modify(|e| *e = false);
             }
         }
         // Count the remaining ones
@@ -63,12 +56,12 @@ fn find_best_view(input: &[(isize, isize)]) -> ((isize, isize), usize) {
 }
 
 #[aoc(day10, part1)]
-fn solver1(input: &[(isize, isize)]) -> usize {
+fn solver1(input: &[(i32, i32)]) -> usize {
     find_best_view(input).1 - 1 // remove own asteroid
 }
 
 #[aoc(day10, part2)]
-fn solver2(input: &[(isize, isize)]) -> isize {
+fn solver2(input: &[(i32, i32)]) -> i32 {
     let best_visible_pos = find_best_view(input).0;
 
     // Find viewing angle and distance of other asteroids
@@ -80,25 +73,23 @@ fn solver2(input: &[(isize, isize)]) -> isize {
             let dy = (pos.1 - best_visible_pos.1) as f64;
             // Angle starts at 0 for positive y-axis and increases clockwise
             // There is a weird rounding error, so add epsilon to all angles..
-            let mut angle = dy.atan2(dx) + 2.500_000_000_001 * std::f64::consts::PI;
-            // Modulo seems to work strangely or not at all for floats...
-            while angle > 2. * std::f64::consts::PI {
-                angle -= 2. * std::f64::consts::PI;
-            }
+            let angle = (dy.atan2(dx) + 2.500_000_000_001 * std::f64::consts::PI)
+                % (2. * std::f64::consts::PI);
+
             let distance_sq = dx * dx + dy * dy;
             (*pos, angle, distance_sq)
         })
-        .collect::<Vec<((isize, isize), f64, f64)>>();
+        .collect::<Vec<((i32, i32), f64, f64)>>();
 
     // Sort them by angle, then by distance
-    asteroid_properties.sort_by(|a, b| {
+    asteroid_properties.sort_unstable_by(|a, b| {
         a.1.partial_cmp(&b.1)
             .unwrap()
             .then(a.2.partial_cmp(&b.2).unwrap())
     });
 
     // Now divide them into rounds, as in shot by laser on the nth round
-    let mut rounds: Vec<Vec<(isize, isize)>> = vec![vec![]];
+    let mut rounds: Vec<Vec<(i32, i32)>> = vec![vec![]];
     let mut last_angle = -1.;
     let mut round_number = 0;
     for entry in asteroid_properties {
