@@ -1,3 +1,4 @@
+#[derive(Debug, Default)]
 pub struct Computer {
     memory: Vec<i64>,
     procnt: i64,
@@ -7,30 +8,21 @@ pub struct Computer {
     output: Vec<i64>,
 }
 
-impl Computer {
-    pub fn new(program_data: Vec<i64>, input: Vec<i64>) -> Self {
-        Self {
-            memory: program_data,
-            procnt: 0,
-            relbse: 0,
-            halted: false,
-            input,
-            output: Vec::new(),
-        }
+impl From<Vec<i64>> for Computer {
+    // Initialize a computer using the vector as initial memory
+    fn from(memory: Vec<i64>) -> Self {
+        Computer::new(memory, Default::default())
     }
-    fn one_step(&mut self) {
-        match self.opcode() {
-            1 => self.bin_op(|a, b| a + b),
-            2 => self.bin_op(|a, b| a * b),
-            3 => self.get_input(),
-            4 => self.give_output(),
-            5 => self.jmp_if(|a| a != 0),
-            6 => self.jmp_if(|a| a == 0),
-            7 => self.bin_op(|a, b| if a < b { 1 } else { 0 }),
-            8 => self.bin_op(|a, b| if a == b { 1 } else { 0 }),
-            9 => self.set_relbase(),
-            99 => self.halted = true,
-            n => panic!("Unknown opcode {}", n),
+}
+
+impl Computer {
+    // Create a new Computer using the given memory (the program to run)
+    // and an input vector.
+    pub fn new(memory: Vec<i64>, input: Vec<i64>) -> Self {
+        Self {
+            memory,
+            input,
+            ..Default::default()
         }
     }
 
@@ -79,6 +71,23 @@ impl Computer {
     // Supplies more input to be added to the internal buffer.
     pub fn more_input(&mut self, i: i64) {
         self.input.insert(0, i)
+    }
+
+    // Process one step starting from current program counter
+    fn one_step(&mut self) {
+        match self.opcode() {
+            1 => self.bin_op(|a, b| a + b),
+            2 => self.bin_op(|a, b| a * b),
+            3 => self.get_input(),
+            4 => self.give_output(),
+            5 => self.jmp_if(|a| a != 0),
+            6 => self.jmp_if(|a| a == 0),
+            7 => self.bin_op(|a, b| if a < b { 1 } else { 0 }),
+            8 => self.bin_op(|a, b| if a == b { 1 } else { 0 }),
+            9 => self.set_relbase(),
+            99 => self.halted = true,
+            n => panic!("Unknown opcode {}", n),
+        }
     }
 
     // Information about the current instruction
@@ -198,12 +207,6 @@ impl Computer {
         let p = self.params(1);
         self.relbse += p[0];
         self.procnt += 2;
-    }
-}
-
-impl From<Vec<i64>> for Computer {
-    fn from(v: Vec<i64>) -> Self {
-        Computer::new(v, Vec::new())
     }
 }
 
