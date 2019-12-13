@@ -14,7 +14,7 @@ fn one_line_many_numbers(input: &str) -> Result<Vec<i64>, ParseIntError> {
 fn solver1(program: &[i64]) -> usize {
     let mut hm = HashMap::<(i64, i64), i64>::new();
     let (mut x, mut y, mut dir) = (0, 0, 0);
-    let mut robot = Computer::new(program.to_vec(), vec![]);
+    let mut robot = Computer::from(program.to_vec());
     while let Some(new_color) = robot.run_until_output_with(|| *hm.get(&(x, y)).unwrap_or(&0)) {
         hm.insert((x, y), new_color);
         let turn = match robot.run_until_output_with(|| new_color) {
@@ -37,7 +37,7 @@ fn solver2(program: &[i64]) -> String {
     let mut hm = HashMap::<(i64, i64), i64>::new();
     hm.insert((0, 0), 1);
     let (mut x, mut y, mut xmin, mut ymin, mut xmax, mut ymax, mut dir) = (0, 0, 0, 0, 0, 0, 0);
-    let mut robot = Computer::new(program.to_vec(), vec![]);
+    let mut robot = Computer::from(program.to_vec());
     while let Some(new_color) = robot.run_until_output_with(|| *hm.get(&(x, y)).unwrap_or(&0)) {
         xmin = min(x, xmin);
         xmax = max(x, xmax);

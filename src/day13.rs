@@ -33,7 +33,7 @@ impl Tile {
 
 #[aoc(day13, part1)]
 fn count_blocks(program: &[i64]) -> usize {
-    let mut arcade = Computer::new(program.to_vec(), vec![]);
+    let mut arcade = Computer::from(program.to_vec());
     let mut hm = HashMap::<(i64, i64), Tile>::new();
     while let (Some(x), Some(y), Some(t)) = (
         arcade.run_until_output(),
@@ -49,7 +49,7 @@ fn count_blocks(program: &[i64]) -> usize {
 fn breakout(program: &[i64]) -> i64 {
     let mut program = program.to_vec();
     program[0] = 2; // insert two coins! greedy
-    let mut arcade = Computer::new(program, vec![]);
+    let mut arcade = Computer::from(program);
 
     let mut hm = HashMap::<(i64, i64), Tile>::new();
 
