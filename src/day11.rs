@@ -7,13 +7,7 @@ use std::num::ParseIntError;
 
 #[aoc_generator(day11)]
 fn one_line_many_numbers(input: &str) -> Result<Vec<isize>, ParseIntError> {
-    input
-        .lines()
-        .next()
-        .unwrap()
-        .split(',')
-        .map(|n| n.parse())
-        .collect()
+    input.split(',').map(str::parse).collect()
 }
 
 #[aoc(day11, part1)]
