@@ -6,7 +6,7 @@ use std::num::ParseIntError;
 // if one of the lines contains garbage, an error).
 #[aoc_generator(day1)]
 fn number_per_line(input: &str) -> Result<Vec<u32>, ParseIntError> {
-    input.lines().map(|l| l.trim().parse()).collect()
+    input.lines().map(str::trim).map(str::parse).collect()
 }
 
 // A solver solves one of the two puzzles.
@@ -23,7 +23,7 @@ fn solver1(input: &[u32]) -> u32 {
 // (Same as Part 1, but you need fuel for the fuel (per part) as well.)
 #[aoc(day1, part2, Loop)]
 fn solver2(input: &[u32]) -> u32 {
-    input.iter().map(|&mass| totalmass(mass)).sum()
+    input.iter().cloned().map(totalmass).sum()
 }
 
 fn totalmass(mut mass: u32) -> u32 {
@@ -39,7 +39,7 @@ fn totalmass(mut mass: u32) -> u32 {
 // I decided to experiment with some more readable/neat/galaxybrained versions.
 #[aoc(day1, part2, Recursion)]
 fn solver2a(input: &[u32]) -> u32 {
-    input.iter().map(|&mass| recursivemass(mass)).sum()
+    input.iter().cloned().map(recursivemass).sum()
 }
 
 fn recursivemass(part: u32) -> u32 {

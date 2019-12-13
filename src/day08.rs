@@ -4,9 +4,6 @@ use std::fmt;
 #[aoc_generator(day8)]
 fn one_line_many_numbers(input: &str) -> Vec<u32> {
     input
-        .lines()
-        .next()
-        .unwrap()
         .chars()
         .map(|n| n.to_digit(10).expect("Found a non-base-ten digit"))
         .collect()

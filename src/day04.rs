@@ -2,13 +2,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 #[aoc_generator(day4)]
 fn number_range(input: &str) -> Vec<Vec<u8>> {
-    input
-        .lines()
-        .next()
-        .unwrap()
-        .split('-')
-        .map(|s| s.as_bytes().to_vec())
-        .collect()
+    input.split('-').map(|s| s.as_bytes().to_vec()).collect()
 }
 
 // The dumb/iterative method works. I am on a time constraint and might do a cerebral

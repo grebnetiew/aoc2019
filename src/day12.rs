@@ -11,7 +11,7 @@ fn positions(input: &str) -> Result<Vec<Vec<i64>>, ParseIntError> {
                 .filter(|&c| c.is_numeric() || c == ',' || c == '-')
                 .collect::<String>()
                 .split(',')
-                .map(|n| n.parse())
+                .map(str::parse)
                 .collect()
         })
         .collect()

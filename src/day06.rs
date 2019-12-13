@@ -10,7 +10,7 @@ fn orbit_parser(input: &str) -> Vec<(String, String)> {
         .lines()
         .map(|l| {
             l.split(')')
-                .map(|p| p.to_string())
+                .map(str::to_string)
                 .next_tuple()
                 .expect("A line does not contain a valid A)B pair")
         })
