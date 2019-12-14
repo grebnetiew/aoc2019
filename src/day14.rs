@@ -101,45 +101,31 @@ fn solver1(reactions: &HashMap<String, (usize, Vec<Ingredient>)>) -> usize {
 
 #[aoc(day14, part2)]
 fn solver2(reactions: &HashMap<String, (usize, Vec<Ingredient>)>) -> usize {
-    let mut rising = true;
-    let mut steps = 0;
     let mut want_fuel = 1;
-    let mut stepsize: f64 = 2.0;
-    loop {
-        let ore_taken = reactor(reactions, want_fuel);
-        if ore_taken <= 1_000_000_000_000 {
-            // Must rise
-            if rising {
-                steps += 1;
-            } else {
-                if steps == 0 && stepsize < 1.001 {
-                    break; // Almost there
-                }
-                rising = true;
-                steps = 0;
-                stepsize = stepsize.sqrt();
-            }
-            want_fuel = (want_fuel as f64 * stepsize) as usize;
-        } else {
-            // Must fall
-            if rising {
-                rising = false;
-                steps = 0;
-                stepsize = stepsize.sqrt();
-            } else {
-                steps += 1;
-            }
-            want_fuel = (want_fuel as f64 / stepsize) as usize;
-        }
-    }
-
-    // Precise adjustment
     loop {
         let ore_taken = reactor(reactions, want_fuel);
         if ore_taken > 1_000_000_000_000 {
-            break want_fuel - 1;
+            break;
         }
-        want_fuel += 1;
+        want_fuel *= 2;
+    }
+
+    // Binary search
+    want_fuel /= 2;
+    let mut step = want_fuel / 2;
+    loop {
+        let ore_taken = reactor(reactions, want_fuel);
+
+        if ore_taken > 1_000_000_000_000 {
+            want_fuel -= step;
+            if step == 1 && reactor(reactions, want_fuel) <= 1_000_000_000_000 {
+                break want_fuel;
+            }
+        } else {
+            want_fuel += step;
+        }
+
+        step = if step / 2 == 0 { 1 } else { step / 2 };
     }
 }
 
