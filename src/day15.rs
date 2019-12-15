@@ -69,13 +69,9 @@ impl Direction {
         }
     }
 
-    fn modify(self, x: i64, y: i64) -> (i64, i64) {
-        match self {
-            Direction::East => (x + 1, y),
-            Direction::West => (x - 1, y),
-            Direction::North => (x, y - 1),
-            Direction::South => (x, y + 1),
-        }
+    fn modify(self, mut x: i64, mut y: i64) -> (i64, i64) {
+        self.modify_mut(&mut x, &mut y);
+        (x, y)
     }
 }
 
@@ -101,6 +97,14 @@ struct Robot {
 }
 
 impl Robot {
+    fn new(program: &[i64]) -> Self {
+        Self {
+            c: Computer::from(program.to_vec()),
+            x: 0,
+            y: 0,
+        }
+    }
+
     fn move_command(&mut self, hm: &mut TileMap, d: Direction) -> Tile {
         self.c.more_input(d.command());
         let response = Tile::new(self.c.run_until_output().expect("Robot has halted"));
@@ -129,16 +133,16 @@ fn print(m: &TileMap, robot: &Robot, d: Direction) -> String {
     let mut result = String::new();
     for y in (ymin - 5)..=(ymax + 5) {
         for x in (xmin - 5)..=(xmax + 5) {
-            match (x, y) {
-                (0, 0) => result += "S",
-                (u, v) if u == robot.x && v == robot.y => result += &format!("{}", d),
-                _ => {
-                    result += match m.get(&(x, y)) {
-                        Some(Tile::Wall) => "#",
-                        Some(Tile::Empty) => ".",
-                        Some(Tile::Oxygen) => "*",
-                        None => " ",
-                    }
+            if (x, y) == (0, 0) {
+                result += "S";
+            } else if (x, y) == (robot.x, robot.y) {
+                result += &format!("{}", d);
+            } else {
+                result += match m.get(&(x, y)) {
+                    Some(Tile::Wall) => "#",
+                    Some(Tile::Empty) => ".",
+                    Some(Tile::Oxygen) => "*",
+                    None => " ",
                 }
             }
         }
@@ -148,30 +152,21 @@ fn print(m: &TileMap, robot: &Robot, d: Direction) -> String {
 }
 
 #[aoc(day15, part1)]
-fn find_oxygen(program: &[i64]) -> usize {
-    let mut robot = Robot {
-        c: Computer::from(program.to_vec()),
-        x: 0,
-        y: 0,
-    };
+fn find_oxygen(program: &[i64]) -> i64 {
+    let mut robot = Robot::new(program);
     let mut hm = HashMap::<(i64, i64), Tile>::new();
     hm.insert((0, 0), Tile::Empty);
-    let mut d = Direction::South;
 
+    let mut d = Direction::North;
     let mut steps = 0;
 
     while steps != 50000 {
         let backtrack = Some(&Tile::Empty) == hm.get(&d.modify(robot.x, robot.y));
-        let res = robot.move_command(&mut hm, d);
-        match res {
+        match robot.move_command(&mut hm, d) {
             Tile::Wall => d = d.turn_right(),
             Tile::Empty => {
                 d = d.turn_left();
-                if backtrack {
-                    steps -= 1;
-                } else {
-                    steps += 1;
-                }
+                steps += if backtrack { -1 } else { 1 };
             }
             Tile::Oxygen => {
                 steps += 1;
@@ -209,18 +204,13 @@ fn flood_step(m: &mut TileMap) {
 
 #[aoc(day15, part2)]
 fn flood_oxygen(program: &[i64]) -> usize {
-    let mut robot = Robot {
-        c: Computer::from(program.to_vec()),
-        x: 0,
-        y: 0,
-    };
+    let mut robot = Robot::new(program);
     let mut hm = HashMap::<(i64, i64), Tile>::new();
     hm.insert((0, 0), Tile::Empty);
-    let mut d = Direction::South;
+    let mut d = Direction::North;
 
-    for _ in 0..50000 {
-        let res = robot.move_command(&mut hm, d);
-        match res {
+    for _ in 0..10000 {
+        match robot.move_command(&mut hm, d) {
             Tile::Wall => d = d.turn_right(),
             _ => d = d.turn_left(),
         }
@@ -229,7 +219,7 @@ fn flood_oxygen(program: &[i64]) -> usize {
     // println!("{}", print(&hm, &robot, d));
 
     let mut minutes = 0;
-    while hm.iter().filter(|(_, &v)| v == Tile::Empty).count() != 0 {
+    while let Some(_) = hm.iter().find(|(_, &v)| v == Tile::Empty) {
         flood_step(&mut hm);
         minutes += 1;
     }
