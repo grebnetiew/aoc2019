@@ -8,17 +8,13 @@ fn one_line_many_numbers(input: &str) -> Result<Vec<i64>, ParseIntError> {
 }
 
 #[aoc(day9, part1)]
-fn solver1(program: &[i64]) -> i64 {
-    Computer::new(program.to_vec(), vec![1])
-        .run_until_output()
-        .unwrap()
+fn solver1(program: &[i64]) -> Option<i64> {
+    Computer::from(program.to_vec()).run_until_output_with(|| 1)
 }
 
 #[aoc(day9, part2)]
-fn solver2(program: &[i64]) -> i64 {
-    Computer::new(program.to_vec(), vec![2])
-        .run_until_output()
-        .unwrap()
+fn solver2(program: &[i64]) -> Option<i64> {
+    Computer::from(program.to_vec()).run_until_output_with(|| 2)
 }
 
 #[cfg(test)]
@@ -26,14 +22,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_run1() {
+    fn test_large_numbers() {
         assert_eq!(
             solver1(&[104, 1_125_899_906_842_624, 99]),
-            1_125_899_906_842_624
+            Some(1_125_899_906_842_624)
         );
     }
-
-    #[test]
-    fn test_run2() {}
-
 }
