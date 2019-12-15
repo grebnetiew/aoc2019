@@ -11,7 +11,7 @@ pub struct Computer {
 impl From<Vec<i64>> for Computer {
     // Initialize a computer using the vector as initial memory
     fn from(memory: Vec<i64>) -> Self {
-        Computer::new(memory, Default::default())
+        Self::new(memory, Default::default())
     }
 }
 

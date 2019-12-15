@@ -1,6 +1,7 @@
 use aoc_runner_derive::aoc_lib;
 
 mod intcode;
+mod intcode_asm;
 
 mod day01;
 mod day02;

@@ -1,4 +1,5 @@
 use crate::intcode::Computer;
+use crate::intcode_asm::Debugger;
 use aoc_runner_derive::{aoc, aoc_generator};
 use std::collections::HashMap;
 use std::fmt;
@@ -204,6 +205,8 @@ fn flood_step(m: &mut TileMap) {
 
 #[aoc(day15, part2)]
 fn flood_oxygen(program: &[i64]) -> usize {
+    println!("{}", Debugger::from(program.to_vec()).assembly());
+
     let mut robot = Robot::new(program);
     let mut hm = HashMap::<(i64, i64), Tile>::new();
     hm.insert((0, 0), Tile::Empty);
