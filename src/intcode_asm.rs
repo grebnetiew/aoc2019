@@ -56,7 +56,7 @@ impl Debugger {
         }
     }
 
-    fn op_to_string(&self) -> String {
+    fn op_to_string(&mut self) -> String {
         (match self.opcode() {
             1 => self.bin_op("+"),
             2 => self.bin_op("*"),
@@ -85,7 +85,11 @@ impl Debugger {
     }
 
     fn param_to_string(&self, offset: usize) -> String {
-        match self.mask().get(offset) {
+        self.param_to_string_mode(offset, *self.mask().get(offset))
+    }
+
+    fn param_to_string_mode(&self, offset: usize, mode: Mode) -> String {
+        match mode {
             Mode::Immediate => return format!("{}", self.memory[self.cursor + offset + 1]),
             Mode::Position => return format!("*{}", self.memory[self.cursor + offset + 1]),
             Mode::Relative => return format!("rb[{}]", self.memory[self.cursor + offset + 1]),
@@ -100,7 +104,7 @@ impl Debugger {
 
     // Standard binary operator. The function supplied is the operation to
     // be performed.
-    fn bin_op(&self, op: &str) -> String {
+    fn bin_op(&mut self, op: &str) -> String {
         if op == "+" && self.param(0) == 0 && *self.mask().get(0) == Mode::Immediate {
             return format!("{} := {}", self.param_to_string(2), self.param_to_string(1));
         }
@@ -112,6 +116,35 @@ impl Debugger {
         }
         if op == "*" && self.param(1) == 1 && *self.mask().get(1) == Mode::Immediate {
             return format!("{} := {}", self.param_to_string(2), self.param_to_string(0));
+        }
+        if op == "=="
+            && (self.memory[self.cursor + 4] % 100 == 5 || self.memory[self.cursor + 4] % 100 == 6)
+        {
+            // Possible inline of comparison-then-if
+            let next_mask = Mask::new(self.memory[self.cursor + 4]);
+            // If the destination of this == statement is also the test of the jump, replace
+            if self.memory[self.cursor + 3] == self.memory[self.cursor + 5]
+                && *self.mask().get(2) == *next_mask.get(0)
+            {
+                let result = format!(
+                    "{} := {} {} {}\n{:4}: if {} {} {} {{ goto {} }}",
+                    self.param_to_string(2),
+                    self.param_to_string(0),
+                    op,
+                    self.param_to_string(1),
+                    self.cursor + 4,
+                    self.param_to_string(0),
+                    if self.memory[self.cursor + 4] % 100 == 5 {
+                        "=="
+                    } else {
+                        "!="
+                    },
+                    self.param_to_string(1),
+                    self.param_to_string_mode(5, *next_mask.get(1)),
+                );
+                self.cursor += 3; // skip the jmp
+                return result;
+            }
         }
         format!(
             "{} := {} {} {}",
