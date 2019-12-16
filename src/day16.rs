@@ -25,8 +25,8 @@ fn fft(digits: &[i32]) -> Vec<i32> {
         .map(|i| {
             digits
                 .iter()
-                .zip(pattern(i + 1, digits.len()))
-                .map(|(a, b)| a * b)
+                .enumerate()
+                .map(|(j, d)| pattern(i + 1, j) * d)
                 .sum::<i32>()
                 .abs()
                 % 10
@@ -34,16 +34,41 @@ fn fft(digits: &[i32]) -> Vec<i32> {
         .collect()
 }
 
-fn pattern(repeat: usize, len: usize) -> Vec<i32> {
-    [0, 1, 0, -1]
+fn pattern(repeat: usize, i: usize) -> i32 {
+    match ((i + 1) / repeat) % 4 {
+        0 | 2 => 0,
+        1 => 1,
+        3 => -1,
+        _ => unreachable!(),
+    }
+}
+
+#[aoc(day16, part2)]
+fn solver2(digits: &[i32]) -> String {
+    let message_offset: usize = digits
         .iter()
-        .map(|i| iter::repeat(i).take(repeat))
-        .flatten()
+        .take(7)
+        .map(i32::to_string)
+        .fold(String::from(""), |a, b| a + &b)
+        .parse()
+        .unwrap();
+
+    let mut digits: Vec<_> = digits
+        .iter()
         .cycle()
-        .skip(1)
-        .take(len)
+        .take(10000 * digits.len())
         .cloned()
-        .collect()
+        .collect();
+    for i in 0..100 {
+        digits = fft(&digits);
+        println!("Did {:?}", i);
+    }
+    digits
+        .iter()
+        .skip(message_offset)
+        .take(8)
+        .map(i32::to_string)
+        .fold(String::from(""), |a, b| a + &b)
 }
 
 #[cfg(test)]
