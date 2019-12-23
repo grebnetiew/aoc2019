@@ -63,6 +63,20 @@ impl Computer {
         self.output.pop()
     }
 
+    // Advance one step.
+    // Supply a function that is called whenever input is needed.
+    // Returns the length of the output.
+    pub fn advance_one_step_with<F>(&mut self, mut f: F) -> usize
+    where
+        F: FnMut() -> i64,
+    {
+        if self.opcode() == 3 && self.input.is_empty() {
+            self.more_input(f());
+        }
+        self.one_step();
+        self.output.len()
+    }
+
     // Gives the first value in memory. Needed for an early puzzle.
     pub fn mem_first(&self) -> i64 {
         self.memory[0]
@@ -71,6 +85,10 @@ impl Computer {
     // Supplies more input to be added to the internal buffer.
     pub fn more_input(&mut self, i: i64) {
         self.input.insert(0, i)
+    }
+
+    pub fn output(&mut self) -> Vec<i64> {
+        self.output.drain(..).collect()
     }
 
     // Process one step starting from current program counter
