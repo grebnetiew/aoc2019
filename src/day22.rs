@@ -32,31 +32,49 @@ enum Shuffle {
 }
 
 #[aoc(day22, part1)]
-fn solver1(input: &[Shuffle]) -> usize {
+fn solver1(input: &[Shuffle]) -> i64 {
     shuffle(input, 10007, 2019)
 }
 
-fn shuffle(input: &[Shuffle], len: i64, find: i64) -> usize {
+fn shuffle(input: &[Shuffle], len: i64, find: i64) -> i64 {
     let mut start = 0i64;
     let mut stride = 1i64;
 
     for s in input.iter() {
         match s {
-            Shuffle::Cut(n) => start = (start + n * stride + len) % len,
-            Shuffle::DealIncrement(n) => stride *= -n,
+            Shuffle::Cut(n) => start = (start + (n - 1) * stride + len) % len,
+            Shuffle::DealIncrement(n) => {
+                stride *= -n;
+                start -= stride;
+            }
             Shuffle::Reverse => {
                 stride *= -1;
                 start = len - start;
             }
         }
+        print_cards(start, stride, len);
     }
     let mut i = start;
     let mut steps = 0;
-    // while i != find {
-    //     steps = steps;
-    //     i = (i + stride) % len;
-    // }
-    steps
+    while steps != len {
+        i = (i + stride + len) % len;
+        if i == find {
+            return steps;
+        }
+        steps += 1;
+    }
+    0
+}
+
+fn print_cards(start: i64, stride: i64, len: i64) {
+    let mut i = start;
+    let mut steps = 0;
+    while steps != len {
+        steps += 1;
+        i = (i + stride + len) % len;
+        print!("{} ", i)
+    }
+    println!();
 }
 
 #[aoc(day22, part2)]
@@ -67,6 +85,17 @@ fn solver2(input: &[Shuffle]) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_basics() {
+        assert_eq!(shuffle(&shuffles("deal into new stack").unwrap(), 10, 4), 5);
+        assert_eq!(shuffle(&shuffles("cut 3").unwrap(), 10, 4), 1);
+        assert_eq!(shuffle(&shuffles("cut -4").unwrap(), 10, 4), 8);
+        assert_eq!(
+            shuffle(&shuffles("deal with increment 3").unwrap(), 10, 4),
+            2
+        );
+    }
 
     #[test]
     fn test_run1() {

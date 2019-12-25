@@ -49,9 +49,9 @@ impl Computer {
     // Run until there is one output, and return it.
     // Supply a function that is called whenever input is needed.
     // This clears the internal input buffer.
-    pub fn run_until_output_with<F>(&mut self, f: F) -> Option<i64>
+    pub fn run_until_output_with<F>(&mut self, mut f: F) -> Option<i64>
     where
-        F: Fn() -> i64,
+        F: FnMut() -> i64,
     {
         self.input.clear();
         while (!self.halted) && self.output.is_empty() {
