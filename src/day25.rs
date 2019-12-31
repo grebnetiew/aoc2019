@@ -24,16 +24,14 @@ fn interactive(program: &[i64]) -> Option<Never> {
     let mut computer = Computer::from(program.to_vec());
     let mut buffer = String::new();
     loop {
-        print!(
-            "{}",
-            computer.run_until_output_with(|| {
-                if buffer.is_empty() {
-                    buffer = read!("{}\n");
-                    buffer += "\n";
-                }
-                buffer.remove(0) as u8 as i64
-            })? as u8 as char
-        )
+        let reader = || {
+            if buffer.is_empty() {
+                buffer = read!("{}\n");
+                buffer += "\n";
+            }
+            buffer.remove(0) as u8 as i64
+        };
+        print!("{}", computer.run_until_output_with(reader)? as u8 as char)
     }
 }
 
