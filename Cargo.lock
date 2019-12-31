@@ -8,6 +8,7 @@ dependencies = [
  "aoc-runner-derive",
  "itertools",
  "num-integer",
+ "pathfinding",
  "permutohedron",
  "regex",
  "text_io",
@@ -64,6 +65,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
 
 [[package]]
+name = "fixedbitset"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37ab347416e802de484e4d03c7316c48f1ecb56574dfd4a46a80f173ce1de04d"
+
+[[package]]
+name = "indexmap"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "712d7b3ea5827fcb9d4fda14bf4da5f136f0db2ae9c8f4bd4e2d1c6fde4e6db2"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "itertools"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -107,6 +123,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4c81ffc11c212fa327657cb19dd85eb7419e163b5b076bede2bdb5c974c07e4"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "pathfinding"
+version = "2.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c84b3f8a97e544e03c0b8865ddff93de5d8c3c96962b51bfc9639e5dddf299b"
+dependencies = [
+ "fixedbitset",
+ "indexmap",
+ "itertools",
+ "num-traits",
 ]
 
 [[package]]

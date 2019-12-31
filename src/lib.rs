@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate text_io;
+extern crate pathfinding;
 
 use aoc_runner_derive::aoc_lib;
 
@@ -25,7 +26,7 @@ mod day16;
 mod day17;
 
 mod day19;
-
+mod day20;
 mod day21;
 mod day22;
 mod day23;
