@@ -32,11 +32,38 @@ enum Shuffle {
 }
 
 #[aoc(day22, part1)]
-fn solver1(input: &[Shuffle]) -> i64 {
+fn solver1(input: &[Shuffle]) -> usize {
     shuffle(input, 10007, 2019)
 }
 
-fn shuffle(input: &[Shuffle], len: i64, find: i64) -> i64 {
+fn shuffle(input: &[Shuffle], len: i64, find: i64) -> usize {
+    let mut deck: Vec<i64> = (0..len).collect();
+
+    for s in input.iter() {
+        match s {
+            Shuffle::Cut(n) => {
+                let n = if *n < 0 { *n + len } else { *n };
+                let mut new_deck = Vec::new();
+                for i in (n..len).chain(0..n) {
+                    new_deck.push(deck[i as usize]);
+                }
+                deck = new_deck;
+            }
+            Shuffle::DealIncrement(n) => {
+                let mut new_deck = vec![0; len as usize];
+                for i in 0..len {
+                    new_deck[((n * i) % len) as usize] = deck[i as usize];
+                }
+                deck = new_deck;
+            }
+            Shuffle::Reverse => deck.reverse(),
+        }
+    }
+
+    deck.iter().position(|&card| card == find).unwrap()
+}
+
+fn shuffle_galaxybrain(input: &[Shuffle], len: i64, find: i64) -> i64 {
     let mut start = 0i64;
     let mut stride = 1i64;
 
